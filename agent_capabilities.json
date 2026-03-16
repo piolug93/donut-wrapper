@@ -1,0 +1,14 @@
+{
+  "os": ["Windows"],
+  "languages": ["python"],
+  "features": {
+    "mythic": ["wrapper"],
+    "custom": []
+  },
+  "payload_output": [".bin", ".b64", ".c", ".rb", ".py", ".ps1", ".cs", ".hex", ".uuid"],
+  "architectures": ["x86_64", "x86", "amd64"],
+  "c2": [],
+  "mythic_version": "v3.4.26",
+  "agent_version": "0.0.1",
+  "supported_wrappers": []
+}
