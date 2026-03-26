@@ -1,6 +1,7 @@
 from mythic_container.PayloadBuilder import *
 from mythic_container.MythicCommandBase import *
 from mythic_container.MythicRPC import *
+from mythic_container.logging import logger
 import os
 import tempfile
 import donut
@@ -152,7 +153,7 @@ class DonutWrapper(PayloadType):
         output = ""
 
         try:
-            agent_build_dir = tempfile.TemporaryDirectory(suffix=self.uuid)
+            agent_build_dir = tempfile.TemporaryDirectory(suffix=self.uuid, delete=False)
             agent_build_path = agent_build_dir.name
 
             file_name_resp = await SendMythicRPCPayloadSearch(
@@ -184,7 +185,9 @@ class DonutWrapper(PayloadType):
             ))
 
             try:
+                logger.debug(f"Calling donut.create with kwargs: {kwargs}")
                 shellcode = donut.create(**kwargs)
+                logger.debug(f"donut.create returned type {type(shellcode)} and length {len(shellcode) if isinstance(shellcode, (bytes, bytearray)) else 'N/A'}")
                 await SendMythicRPCPayloadUpdatebuildStep(MythicRPCPayloadUpdateBuildStepMessage(
                     PayloadUUID=self.uuid,
                     StepName="Generating...",
@@ -201,7 +204,13 @@ class DonutWrapper(PayloadType):
                 else:
                     output += "[donut.create error] returned non-bytes\n"
             except Exception as e:
-                output += f"[donut.create exception]\n{str(e)}\n"
+                await SendMythicRPCPayloadUpdatebuildStep(MythicRPCPayloadUpdateBuildStepMessage(
+                    PayloadUUID=self.uuid,
+                    StepName="Generating...",
+                    StepStdout=f"[donut.create exception]\n{str(e)}",
+                    StepSuccess=False
+                ))
+                raise e
         except Exception as e:
             resp.build_stderr = output or str(e)
             return resp
@@ -318,7 +327,6 @@ class DonutWrapper(PayloadType):
         if modname:
             kwargs["modname"] = modname
 
-        ## TODO: dorobić pobieranie decoy z Mythic i zapisywanie go do pliku, a następnie przekazywanie ścieżki do tego pliku w kwargs["decoy"]
         decoy = self.get_parameter("decoy")
         if decoy:
             decoy_resp = await SendMythicRPCFileGetContent(
