@@ -153,7 +153,7 @@ class DonutWrapper(PayloadType):
         output = ""
 
         try:
-            agent_build_dir = tempfile.TemporaryDirectory(suffix=self.uuid, delete=False)
+            agent_build_dir = tempfile.TemporaryDirectory(suffix=self.uuid)
             agent_build_path = agent_build_dir.name
 
             file_name_resp = await SendMythicRPCPayloadSearch(
